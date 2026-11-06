@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rotatividade e qualidade do serviço numa operação de expedição | Eduardo Geraldes</title>
+  <meta name="description" content="Projeto com dados simulados de uma operação de expedição: como a entrada de novos colaboradores afeta a taxa de serviço e os erros de separação. Painel interativo, dados e código.">
+  <meta name="theme-color" content="#0B1020">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/barlow-condensed-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script>(function(){var d=document.documentElement;d.classList.add("js");var t="dark";try{t=localStorage.getItem("modo")||"dark"}catch(e){}d.setAttribute("data-theme",t==="light"?"light":"dark")})()</script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Saltar para o conteúdo</a>
+
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href="index.html">Eduardo Geraldes</a>
+      <div class="head-r">
+        <nav class="nav" aria-label="Principal">
+          <a href="index.html#projetos" aria-current="page">Projetos</a>
+          <a href="index.html#sobre">Sobre</a>
+          <a href="contactos.html">Contactos</a>
+        </nav>
+        <button class="theme-toggle" type="button" aria-label="Mudar para o modo claro" title="Mudar para o modo claro">
+          <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <div class="page-head">
+      <canvas class="net" aria-hidden="true"></canvas>
+      <div class="wrap">
+        <h1>Rotatividade e qualidade do serviço numa operação de expedição</h1>
+        <dl class="facts">
+          <dt>Pergunta</dt>
+          <dd>A entrada de novos colaboradores numa equipa de armazém afeta a qualidade do serviço? E quanto?</dd>
+          <dt>Ferramentas</dt>
+          <dd>Python (pandas e numpy) para gerar os dados, painel interativo em HTML. Versão em Power BI em construção.</dd>
+          <dt>Estado</dt>
+          <dd>Painel interativo disponível. Falta a versão em Power BI.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="wrap page-main prose">
+      <div class="notice">
+        <p><strong>Os dados são simulados.</strong> Usei parâmetros de uma operação real (cerca de 2.500 volumes e 300 paletes por turno, equipa de 4 pessoas no turno principal) e não usei dados de nenhuma empresa. O modelo está em <a href="dados/gerar_dados.py">gerar_dados.py</a>, com todos os pressupostos à vista.</p>
+        <p>O efeito da rotatividade na qualidade é um pressuposto do modelo. Por isso este projeto mostra como modelei e analisei uma operação, e não prova que o efeito existe na realidade.</p>
+      </div>
+
+      <h2>Como está montado</h2>
+      <p>Doze meses de operação, de setembro de 2025 a agosto de 2026, com 3 turnos por dia útil: 313 dias e 939 linhas, cerca de 1,8 milhões de volumes. O modelo de dados tem uma tabela de factos (<code>fact_operacao</code>), um calendário (<code>dim_calendario</code>) e uma tabela com as 6 datas de entrada de novos colaboradores no turno principal (<code>dim_eventos</code>).</p>
+      <p>Indicadores: volumes por turno, produtividade (volumes por hora-homem), taxa de serviço (encomendas entregues no prazo) e erros de separação por 1000 linhas de picking. A variável que quis testar foi a antiguidade média da equipa.</p>
+
+      <h2>O que o painel mostra</h2>
+      <ul>
+        <li>Nos 30 dias a seguir a cada entrada, a taxa de serviço é de 96,91%, contra 98,11% nos restantes dias: menos 1,20 pontos percentuais.</li>
+        <li>Os erros de separação sobem de 2,60 para 2,90 por 1000 linhas nessa janela.</li>
+        <li>A produtividade não cai: é de 79,4 volumes por hora-homem na janela e de 78,2 fora dela. É dominada pela sazonalidade, com novembro e dezembro a puxar tudo para cima.</li>
+        <li>A correlação semanal entre a antiguidade média da equipa e a taxa de serviço é de +0,72, e com os erros é de −0,59.</li>
+      </ul>
+      <p>Quem olhasse só para a produtividade concluiria que a rotatividade não tem custo. No modelo, o custo aparece na qualidade: a equipa mantém o ritmo à custa da precisão.</p>
+
+      <h2>Painel</h2>
+      <p>É a versão interativa. <a href="painel-expedicao.html" target="_blank" rel="noopener">Abrir o painel em ecrã inteiro</a>.</p>
+      <div class="embed">
+        <iframe src="painel-expedicao.html" data-autoheight title="Painel de desempenho da operação de expedição (dados simulados)" loading="lazy"></iframe>
+      </div>
+
+      <h2>O que falta</h2>
+      <ul>
+        <li>Refazer o painel em Power BI, com o modelo em estrela e as medidas em DAX.</li>
+        <li>Separar o efeito da sazonalidade do efeito da rotatividade com um modelo de regressão, para dizer quanto do desvio é de cada um.</li>
+        <li>Medir o tempo que um novo colaborador demora a atingir o desempenho médio da equipa. Aqui é um pressuposto do modelo e devia ser um dado observado.</li>
+      </ul>
+
+      <h2>Dados e código</h2>
+      <ul class="downloads">
+        <li><a href="dados/gerar_dados.py">gerar_dados.py</a><span class="small">modelo que gera os dados</span></li>
+        <li><a href="dados/fact_operacao.csv">fact_operacao.csv</a><span class="small">939 linhas</span></li>
+        <li><a href="dados/dim_calendario.csv">dim_calendario.csv</a><span class="small">calendário</span></li>
+        <li><a href="dados/dim_eventos.csv">dim_eventos.csv</a><span class="small">6 entradas de novos colaboradores</span></li>
+        <li><a href="dados/dados_operacao_armazem.xlsx">dados_operacao_armazem.xlsx</a><span class="small">as três tabelas num só ficheiro</span></li>
+      </ul>
+    </div>
+  </main>
+
+  <footer class="site-foot">
+    <div class="wrap">
+      <div class="cols">
+        <p class="small">© <span data-year>2026</span> Eduardo Geraldes. Dados simulados.</p>
+        <p><a href="index.html#projetos">Voltar aos projetos</a> &nbsp; <a href="contactos.html">Contactos</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/fx.js"></script>
+</body>
+</html>

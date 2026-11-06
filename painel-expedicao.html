@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-PT" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operação de Expedição — Painel de Desempenho</title>
+<style>
+  :root{
+    --plane:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+    --s1:#2a78d6; --s2:#eb6834; --good:#0ca30c; --crit:#d03b3b; --warn:#fab219;
+  }
+  :root[data-theme="dark"]{
+    --plane:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
+    --s1:#3987e5; --s2:#d95926; --good:#0ca30c; --crit:#d03b3b; --warn:#fab219;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--plane);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+  header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--ink2);font-size:13px;max-width:640px;margin:0}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--ink2);border:1px solid var(--ring);border-radius:999px;padding:3px 9px;margin-top:8px}
+  button{font:inherit;color:var(--ink2);background:var(--surface);border:1px solid var(--ring);
+    border-radius:8px;padding:7px 12px;cursor:pointer}
+  button:hover{color:var(--ink)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:22px 0}
+  .tile{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px 18px}
+  .tile .lab{font-size:12px;color:var(--ink2);margin-bottom:6px}
+  .tile .val{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+  .tile .val small{font-size:15px;font-weight:500;color:var(--ink2);margin-left:3px}
+  .tile .note{font-size:12px;color:var(--muted);margin-top:5px}
+  .card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:18px 20px 12px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 2px;font-weight:600}
+  .card p.k{font-size:12.5px;color:var(--ink2);margin:0 0 14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:840px){.grid2{grid-template-columns:1fr}}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:0 0 10px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .gl{stroke:var(--grid);stroke-width:1}
+  .ax{stroke:var(--axis);stroke-width:1}
+  .tk{fill:var(--muted);font-size:11px}
+  .dl{fill:var(--ink2);font-size:11.5px;font-weight:600}
+  .tip{position:fixed;pointer-events:none;background:var(--surface);border:1px solid var(--ring);
+    border-radius:8px;padding:8px 10px;font-size:12px;color:var(--ink);opacity:0;transition:opacity .1s;
+    box-shadow:0 6px 20px rgba(0,0,0,.13);z-index:9;white-space:nowrap}
+  .tip b{display:block;margin-bottom:3px;font-size:11.5px;color:var(--ink2);font-weight:600}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+  th,td{text-align:right;padding:7px 10px;border-bottom:1px solid var(--grid)}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--ink2);font-weight:600}
+  .hid{display:none}
+  .foot{color:var(--muted);font-size:12px;margin-top:26px;border-top:1px solid var(--grid);padding-top:14px}
+  .ev{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Operação de Expedição — Painel de Desempenho</h1>
+    <p class="sub">12 meses de atividade de um armazém de expedição (set 2025 – ago 2026).
+      A pergunta do estudo: <b>a rotatividade da equipa afeta a qualidade do serviço — e quanto?</b></p>
+    <span class="tag">Dados simulados a partir de parâmetros reais de operação</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button id="theme">Modo escuro</button>
+    <button id="tbl">Ver tabela</button>
+  </div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="card">
+  <h2>Antiguidade da equipa e taxa de serviço, semana a semana</h2>
+  <p class="k">Duas escalas diferentes → dois gráficos com o mesmo eixo de tempo. As linhas tracejadas marcam a entrada de um novo colaborador.</p>
+  <div id="c_small"></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>Efeito dos 30 dias após cada entrada</h2>
+    <p class="k">Comparação entre as janelas de 30 dias a seguir a cada uma das 6 entradas e os restantes dias do período. Escalas próprias por métrica — a distância entre os pontos é que se lê.</p>
+    <div class="legend">
+      <span><i style="background:var(--s2)"></i>30 dias após entrada</span>
+      <span><i style="background:var(--s1)"></i>Restantes dias</span>
+    </div>
+    <div id="c_comp"></div>
+  </div>
+  <div class="card">
+    <h2>Volumes expedidos por mês</h2>
+    <p class="k">Todos os turnos. O pico de novembro e a quebra de agosto condicionam qualquer leitura de produtividade.</p>
+    <div id="c_mes"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Desempenho por turno</h2>
+  <p class="k">Volumes médios por turno e respetiva taxa de serviço. O turno da tarde concentra o maior volume.</p>
+  <div id="c_turno"></div>
+</div>
+
+<div class="card hid" id="tabela">
+  <h2>Vista em tabela — agregados semanais do turno principal</h2>
+  <p class="k">Os mesmos dados dos gráficos, em texto.</p>
+  <div style="max-height:340px;overflow:auto"><table id="t"></table></div>
+</div>
+
+<p class="foot" id="foot"></p>
+</div>
+<div class="tip" id="tip"></div>
+<script id="dados" type="application/json">{"kpi": {"vol_turno": 2522, "pal_turno": 305, "prod": 78.8, "servico": 97.5, "e1000": 2.75, "ant": 125, "dias": 313, "volumes_total": 1799430, "corr_err": -0.59, "corr_serv": 0.72}, "semanas": [{"d": "2025-09-01", "serv": 98.59, "e1000": 2.16, "prod": 79.7, "ant": 169}, {"d": "2025-09-08", "serv": 98.89, "e1000": 1.5, "prod": 77.5, "ant": 176}, {"d": "2025-09-15", "serv": 98.75, "e1000": 2.29, "prod": 81.0, "ant": 183}, {"d": "2025-09-22", "serv": 98.97, "e1000": 2.72, "prod": 83.1, "ant": 190}, {"d": "2025-09-29", "serv": 98.65, "e1000": 1.89, "prod": 88.9, "ant": 197}, {"d": "2025-10-06", "serv": 98.16, "e1000": 1.78, "prod": 92.6, "ant": 204}, {"d": "2025-10-13", "serv": 97.26, "e1000": 2.36, "prod": 83.1, "ant": 125}, {"d": "2025-10-20", "serv": 97.84, "e1000": 2.5, "prod": 82.7, "ant": 132}, {"d": "2025-10-27", "serv": 97.55, "e1000": 2.6, "prod": 84.5, "ant": 139}, {"d": "2025-11-03", "serv": 97.06, "e1000": 2.64, "prod": 97.1, "ant": 146}, {"d": "2025-11-10", "serv": 97.45, "e1000": 2.71, "prod": 93.8, "ant": 153}, {"d": "2025-11-17", "serv": 98.73, "e1000": 2.75, "prod": 99.4, "ant": 160}, {"d": "2025-11-24", "serv": 98.83, "e1000": 2.29, "prod": 101.0, "ant": 167}, {"d": "2025-12-01", "serv": 96.66, "e1000": 3.33, "prod": 89.2, "ant": 102}, {"d": "2025-12-08", "serv": 95.64, "e1000": 2.66, "prod": 85.8, "ant": 109}, {"d": "2025-12-15", "serv": 97.23, "e1000": 2.72, "prod": 87.9, "ant": 116}, {"d": "2025-12-22", "serv": 97.11, "e1000": 3.4, "prod": 90.4, "ant": 123}, {"d": "2025-12-29", "serv": 97.88, "e1000": 2.95, "prod": 84.4, "ant": 130}, {"d": "2026-01-05", "serv": 98.09, "e1000": 2.36, "prod": 69.8, "ant": 137}, {"d": "2026-01-12", "serv": 97.64, "e1000": 2.2, "prod": 72.3, "ant": 144}, {"d": "2026-01-19", "serv": 97.42, "e1000": 2.87, "prod": 65.6, "ant": 86}, {"d": "2026-01-26", "serv": 97.26, "e1000": 1.86, "prod": 68.9, "ant": 94}, {"d": "2026-02-02", "serv": 96.93, "e1000": 3.39, "prod": 68.9, "ant": 100}, {"d": "2026-02-09", "serv": 95.82, "e1000": 3.02, "prod": 71.7, "ant": 108}, {"d": "2026-02-16", "serv": 97.89, "e1000": 3.24, "prod": 73.3, "ant": 114}, {"d": "2026-02-23", "serv": 98.15, "e1000": 2.36, "prod": 71.9, "ant": 122}, {"d": "2026-03-02", "serv": 98.09, "e1000": 2.81, "prod": 77.0, "ant": 128}, {"d": "2026-03-09", "serv": 97.79, "e1000": 2.87, "prod": 77.4, "ant": 136}, {"d": "2026-03-16", "serv": 96.07, "e1000": 3.22, "prod": 74.6, "ant": 81}, {"d": "2026-03-23", "serv": 96.18, "e1000": 3.15, "prod": 75.2, "ant": 88}, {"d": "2026-03-30", "serv": 97.63, "e1000": 2.76, "prod": 72.9, "ant": 95}, {"d": "2026-04-06", "serv": 96.54, "e1000": 2.87, "prod": 77.6, "ant": 102}, {"d": "2026-04-13", "serv": 95.95, "e1000": 2.78, "prod": 74.7, "ant": 109}, {"d": "2026-04-20", "serv": 97.1, "e1000": 2.52, "prod": 78.7, "ant": 116}, {"d": "2026-04-27", "serv": 97.96, "e1000": 2.74, "prod": 77.9, "ant": 123}, {"d": "2026-05-04", "serv": 97.8, "e1000": 3.23, "prod": 76.9, "ant": 130}, {"d": "2026-05-11", "serv": 95.96, "e1000": 3.28, "prod": 73.9, "ant": 85}, {"d": "2026-05-18", "serv": 96.4, "e1000": 2.98, "prod": 75.1, "ant": 92}, {"d": "2026-05-25", "serv": 97.17, "e1000": 2.76, "prod": 74.4, "ant": 99}, {"d": "2026-06-01", "serv": 96.6, "e1000": 2.98, "prod": 74.8, "ant": 106}, {"d": "2026-06-08", "serv": 97.58, "e1000": 2.58, "prod": 77.5, "ant": 113}, {"d": "2026-06-15", "serv": 97.86, "e1000": 3.59, "prod": 78.8, "ant": 120}, {"d": "2026-06-22", "serv": 98.18, "e1000": 3.06, "prod": 79.5, "ant": 127}, {"d": "2026-06-29", "serv": 97.42, "e1000": 3.18, "prod": 84.1, "ant": 134}, {"d": "2026-07-06", "serv": 96.73, "e1000": 3.34, "prod": 80.8, "ant": 86}, {"d": "2026-07-13", "serv": 96.84, "e1000": 2.68, "prod": 79.7, "ant": 94}, {"d": "2026-07-20", "serv": 97.31, "e1000": 3.08, "prod": 84.0, "ant": 100}, {"d": "2026-07-27", "serv": 98.07, "e1000": 2.7, "prod": 78.7, "ant": 108}, {"d": "2026-08-03", "serv": 98.26, "e1000": 3.35, "prod": 60.7, "ant": 114}, {"d": "2026-08-10", "serv": 97.57, "e1000": 3.43, "prod": 61.6, "ant": 122}, {"d": "2026-08-17", "serv": 98.29, "e1000": 2.46, "prod": 64.2, "ant": 128}, {"d": "2026-08-24", "serv": 97.43, "e1000": 2.7, "prod": 65.4, "ant": 136}, {"d": "2026-08-31", "serv": 99.17, "e1000": 1.87, "prod": 67.1, "ant": 140}], "meses": [{"m": "2025-09", "vol": 148611}, {"m": "2025-10", "vol": 165784}, {"m": "2025-11", "vol": 173425}, {"m": "2025-12", "vol": 178355}, {"m": "2026-01", "vol": 137325}, {"m": "2026-02", "vol": 125494}, {"m": "2026-03", "vol": 145689}, {"m": "2026-04", "vol": 147027}, {"m": "2026-05", "vol": 145095}, {"m": "2026-06", "vol": 151811}, {"m": "2026-07", "vol": 162046}, {"m": "2026-08", "vol": 118768}], "eventos": ["2025-10-13", "2025-12-01", "2026-01-19", "2026-03-16", "2026-05-11", "2026-07-06"], "comp": {"janela": {"err": 2.9, "serv": 96.91, "prod": 79.4}, "resto": {"err": 2.6, "serv": 98.11, "prod": 78.2}}, "turnos": [{"t": "Manhã (06–14)", "vol": 2088, "servico": 98.45, "e1000": 2.53, "prod": 52.2}, {"t": "Tarde (14–22)", "vol": 2522, "servico": 97.5, "e1000": 2.75, "prod": 78.8}, {"t": "Noite (22–06)", "vol": 1139, "servico": 98.68, "e1000": 2.59, "prod": 47.5}]}</script>
+<script>
+const D=JSON.parse(document.getElementById('dados').textContent);
+const tip=document.getElementById('tip');
+const nf=(v,d=0)=>v.toLocaleString('pt-PT',{minimumFractionDigits:d,maximumFractionDigits:d});
+function showTip(e,html){tip.innerHTML=html;tip.style.opacity=1;
+  tip.style.left=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-10)+'px';
+  tip.style.top=(e.clientY-tip.offsetHeight-12)+'px';}
+function hideTip(){tip.style.opacity=0}
+const SVG=(w,h)=>{const s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  s.setAttribute('viewBox',`0 0 ${w} ${h}`);s.setAttribute('role','img');return s;}
+const el=(t,a={})=>{const n=document.createElementNS('http://www.w3.org/2000/svg',t);
+  for(const k in a)n.setAttribute(k,a[k]);return n;}
+
+/* ---------- KPI tiles ---------- */
+const K=D.kpi;
+const tiles=[
+ ['Volumes por turno',nf(K.vol_turno),'','média do turno principal · '+nf(K.pal_turno)+' paletes'],
+ ['Produtividade',nf(K.prod,1),'vol/hora-homem','turno principal, equipa de 4'],
+ ['Taxa de serviço',nf(K.servico,1),'%','encomendas expedidas no prazo'],
+ ['Erros de separação',nf(K.e1000,2),'/1000 linhas','qualidade do picking'],
+];
+document.getElementById('kpis').innerHTML=tiles.map(t=>
+ `<div class="tile"><div class="lab">${t[0]}</div>
+  <div class="val">${t[1]}<small>${t[2]}</small></div>
+  <div class="note">${t[3]}</div></div>`).join('');
+
+/* ---------- small multiples: antiguidade + serviço ---------- */
+function smallMultiples(){
+  const S=D.semanas, W=1100, H=155, P={t:16,r:16,b:26,l:52};
+  const host=document.getElementById('c_small'); host.innerHTML='';
+  const t0=new Date(S[0].d).getTime(), t1=new Date(S[S.length-1].d).getTime();
+  const X=d=>P.l+((new Date(d).getTime()-t0)/(t1-t0))*(W-P.l-P.r);
+  const panels=[
+    {key:'ant',  lab:'Antiguidade média da equipa (dias)', col:'var(--s1)', dec:0, suf:' dias'},
+    {key:'serv', lab:'Taxa de serviço (%)',                col:'var(--s2)', dec:2, suf:'%'},
+  ];
+  panels.forEach(pn=>{
+    const vals=S.map(s=>s[pn.key]);
+    let lo=Math.min(...vals), hi=Math.max(...vals);
+    const pad=(hi-lo)*0.18||1; lo-=pad; hi+=pad;
+    const Y=v=>P.t+(1-(v-lo)/(hi-lo))*(H-P.t-P.b);
+    const s=SVG(W,H); s.setAttribute('aria-label',pn.lab);
+    // grid + eixo y
+    for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3;
+      s.appendChild(el('line',{x1:P.l,x2:W-P.r,y1:Y(v),y2:Y(v),class:'gl'}));
+      const tx=el('text',{x:P.l-8,y:Y(v)+4,class:'tk','text-anchor':'end'});
+      tx.textContent=nf(v,pn.dec); s.appendChild(tx);}
+    // eventos
+    D.eventos.forEach(d=>{const x=X(d); if(x>=P.l&&x<=W-P.r)
+      s.appendChild(el('line',{x1:x,x2:x,y1:P.t,y2:H-P.b,class:'ev'}));});
+    // linha
+    const dpath=S.map((r,i)=>`${i?'L':'M'}${X(r.d).toFixed(1)},${Y(r[pn.key]).toFixed(1)}`).join(' ');
+    s.appendChild(el('path',{d:dpath,fill:'none',stroke:pn.col,'stroke-width':2,
+      'stroke-linejoin':'round','stroke-linecap':'round'}));
+    // eixo x (meses)
+    let last='';
+    S.forEach(r=>{const m=r.d.slice(0,7);
+      if(m!==last){last=m;
+        const tx=el('text',{x:X(r.d),y:H-8,class:'tk','text-anchor':'middle'});
+        tx.textContent=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][+m.slice(5,7)-1];
+        s.appendChild(tx);}});
+    s.appendChild(el('line',{x1:P.l,x2:W-P.r,y1:H-P.b,y2:H-P.b,class:'ax'}));
+    // hover
+    S.forEach(r=>{
+      const c=el('circle',{cx:X(r.d),cy:Y(r[pn.key]),r:9,fill:'transparent'});
+      c.addEventListener('mousemove',e=>showTip(e,
+        `<b>semana de ${r.d}</b>${pn.lab}: ${nf(r[pn.key],pn.dec)}${pn.suf}`));
+      c.addEventListener('mouseleave',hideTip); s.appendChild(c);});
+    const lab=document.createElement('div');
+    lab.style.cssText='font-size:12.5px;font-weight:600;color:var(--ink2);margin:6px 0 2px';
+    lab.textContent=pn.lab;
+    host.appendChild(lab); host.appendChild(s);
+  });
+}
+
+/* ---------- comparação janela vs resto: dumbbell ---------- */
+function comp(){
+  const C=D.comp, W=520,H=232,P={t:34,r:78,b:26,l:78};
+  const rows=[
+    {lab:'Erros / 1000 linhas', a:C.janela.err,  b:C.resto.err,  dec:2, pior:'a'},
+    {lab:'Taxa de serviço (%)', a:C.janela.serv, b:C.resto.serv, dec:2, pior:'a'},
+  ];
+  const s=SVG(W,H); s.setAttribute('aria-label','Comparação entre janelas de 30 dias e o resto do período');
+  const rowH=(H-P.t-P.b)/rows.length;
+  rows.forEach((r,i)=>{
+    const y=P.t+i*rowH+rowH*0.42;
+    const lo=Math.min(r.a,r.b), hi=Math.max(r.a,r.b), span=(hi-lo)||1;
+    const X=v=>P.l+((v-(lo-span*0.55))/(span*2.1))*(W-P.l-P.r);
+    const cap=el('text',{x:P.l,y:y-36,class:'tk'}); cap.textContent=r.lab; s.appendChild(cap);
+    s.appendChild(el('line',{x1:X(lo),x2:X(hi),y1:y,y2:y,stroke:'var(--axis)','stroke-width':2,'stroke-linecap':'round'}));
+    [[r.b,'var(--s1)','Restantes dias',1],[r.a,'var(--s2)','30 dias após entrada',-1]].forEach(([v,col,nm,side])=>{
+      s.appendChild(el('circle',{cx:X(v),cy:y,r:9,fill:'var(--surface)'}));
+      const c=el('circle',{cx:X(v),cy:y,r:7,fill:col});
+      c.addEventListener('mousemove',e=>showTip(e,`<b>${nm}</b>${r.lab}: ${nf(v,r.dec)}`));
+      c.addEventListener('mouseleave',hideTip); s.appendChild(c);
+      const t=el('text',{x:X(v),y:y-16,class:'dl','text-anchor':'middle'});
+      t.textContent=nf(v,r.dec); s.appendChild(t);
+    });
+    const d=r.a-r.b, sinal=d>0?'+':'';
+    const dt=el('text',{x:W-P.r+14,y:y+4,class:'tk'});
+    dt.textContent=sinal+nf(d,r.dec)+(i?' p.p.':'');
+    s.appendChild(dt);
+  });
+  document.getElementById('c_comp').appendChild(s);
+}
+
+/* ---------- volumes por mês ---------- */
+function meses(){
+  const M=D.meses, W=520,H=230,P={t:20,r:12,b:40,l:56};
+  const hi=Math.max(...M.map(m=>m.vol))*1.12;
+  const Y=v=>P.t+(1-v/hi)*(H-P.t-P.b);
+  const bw=(W-P.l-P.r)/M.length-6;
+  const s=SVG(W,H); s.setAttribute('aria-label','Volumes por mês');
+  for(let i=0;i<=3;i++){const v=hi*i/3;
+    s.appendChild(el('line',{x1:P.l,x2:W-P.r,y1:Y(v),y2:Y(v),class:'gl'}));
+    const t=el('text',{x:P.l-8,y:Y(v)+4,class:'tk','text-anchor':'end'});
+    t.textContent=(v/1000).toFixed(0)+'k'; s.appendChild(t);}
+  M.forEach((m,i)=>{
+    const x=P.l+i*((W-P.l-P.r)/M.length)+3;
+    const r=el('rect',{x:x,y:Y(m.vol),width:bw,height:(H-P.b)-Y(m.vol),fill:'var(--s1)',rx:4});
+    r.addEventListener('mousemove',e=>showTip(e,`<b>${m.m}</b>${nf(m.vol)} volumes`));
+    r.addEventListener('mouseleave',hideTip); s.appendChild(r);
+    const t=el('text',{x:x+bw/2,y:H-24,class:'tk','text-anchor':'middle'});
+    t.textContent=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][+m.m.slice(5,7)-1];
+    s.appendChild(t);});
+  s.appendChild(el('line',{x1:P.l,x2:W-P.r,y1:H-P.b,y2:H-P.b,class:'ax'}));
+  document.getElementById('c_mes').appendChild(s);
+}
+
+/* ---------- por turno ---------- */
+function turnos(){
+  const T=D.turnos, W=1100,H=190,P={t:18,r:150,b:34,l:150};
+  const hi=Math.max(...T.map(t=>t.vol))*1.1;
+  const s=SVG(W,H); s.setAttribute('aria-label','Desempenho por turno');
+  const rowH=(H-P.t-P.b)/T.length;
+  T.forEach((t,i)=>{
+    const y=P.t+i*rowH+rowH*0.18, h=rowH*0.5;
+    const w=(t.vol/hi)*(W-P.l-P.r);
+    const r=el('rect',{x:P.l,y:y,width:w,height:h,fill:'var(--s1)',rx:4});
+    r.addEventListener('mousemove',e=>showTip(e,
+      `<b>${t.t}</b>${nf(t.vol)} volumes/turno · serviço ${nf(t.servico,2)}% · ${nf(t.e1000,2)} erros/1000`));
+    r.addEventListener('mouseleave',hideTip); s.appendChild(r);
+    const lb=el('text',{x:P.l-12,y:y+h/2+4,class:'tk','text-anchor':'end'}); lb.textContent=t.t;
+    s.appendChild(lb);
+    const vl=el('text',{x:P.l+w+10,y:y+h/2+4,class:'dl'});
+    vl.textContent=nf(t.vol)+' vol · '+nf(t.servico,2)+'% serviço'; s.appendChild(vl);
+  });
+  document.getElementById('c_turno').appendChild(s);
+}
+
+/* ---------- tabela ---------- */
+function tabela(){
+  const h=['Semana','Antiguidade média (dias)','Taxa de serviço (%)','Erros /1000','Produtividade (vol/h-h)'];
+  document.getElementById('t').innerHTML='<thead><tr>'+h.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>'+
+    D.semanas.map(r=>`<tr><td>${r.d}</td><td>${nf(r.ant)}</td><td>${nf(r.serv,2)}</td><td>${nf(r.e1000,2)}</td><td>${nf(r.prod,1)}</td></tr>`).join('')+'</tbody>';
+}
+
+smallMultiples(); comp(); meses(); turnos(); tabela();
+document.getElementById('foot').textContent=
+ `${nf(K.dias)} dias de operação · ${nf(K.volumes_total)} volumes no período · antiguidade média da equipa do turno principal: ${nf(K.ant)} dias · `+
+ `correlação semanal antiguidade × erros: ${nf(K.corr_err,2)} · antiguidade × taxa de serviço: ${nf(K.corr_serv,2)}. `+
+ `Dataset simulado; o modelo generativo está publicado em gerar_dados.py.`;
+document.getElementById('theme').onclick=e=>{
+  const d=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',d?'light':'dark');
+  e.target.textContent=d?'Modo escuro':'Modo claro';};
+document.getElementById('tbl').onclick=e=>{
+  const t=document.getElementById('tabela'); t.classList.toggle('hid');
+  e.target.textContent=t.classList.contains('hid')?'Ver tabela':'Esconder tabela';};
+</script>
+</body></html>
