@@ -3,7 +3,7 @@
 (function () {
   "use strict";
 
-  var EMAIL = "eduardogeraldes2002@gmail.com";
+  var EMAIL = ["eduardogeraldes2002", "gmail.com"].join("@"); // montado aqui para não aparecer como texto na página
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   document.querySelectorAll("[data-year]").forEach(function (n) {
