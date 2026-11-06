@@ -28,7 +28,7 @@ A página 404 usa caminhos absolutos, por isso o repositório deve chamar-se `<u
 index.html                 início: gráfico, projetos, sobre e competências
 projeto-expedicao.html     página do projeto da operação de expedição
 painel-expedicao.html      painel interativo (incorporado na página do projeto)
-contactos.html             e-mail, LinkedIn e formulário
+contactos.html             formulário e LinkedIn (o e-mail não aparece escrito na página)
 404.html                   página de erro
 assets/                    estilos, scripts (main.js, chart.js, fx.js), fontes (Barlow, licença OFL), foto e ícone
 dados/                     dados simulados e o modelo que os gera
@@ -44,7 +44,7 @@ dados/                     dados simulados e o modelo que os gera
 - **Cores e modos:** estão no início de `assets/css/style.css`: o bloco `:root` é o modo escuro e `html[data-theme="light"]` é o modo claro. O botão no cabeçalho alterna entre os dois e o browser lembra a escolha; sem escolha, abre em escuro.
 - **Animações:** as de entrada e de scroll estão em `style.css`; os efeitos que seguem o rato (rede de pontos, cursor, brilho e inclinação dos cartões, botões magnéticos, parallax) estão em `assets/js/fx.js`. Para os desligar, tira a linha `fx.js` no fim de cada página. Tudo respeita a preferência "reduzir movimento" do sistema, o cursor e a inclinação só aparecem com rato, e sem JavaScript o conteúdo aparece todo.
 - **Gráfico do início:** os dados estão em `assets/js/data.js`.
-- **E-mail do formulário:** está em `assets/js/main.js` (`EMAIL`) e em `contactos.html`.
+- **E-mail do formulário:** está só em `assets/js/main.js` (`EMAIL`).
 
 ## Notas
 
