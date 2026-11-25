@@ -7,7 +7,6 @@ Portefólio pessoal com projetos de análise de dados aplicados a operações.
 ## Projetos
 
 - **Rotatividade e qualidade do serviço numa operação de expedição.** Modelo de 12 meses de uma operação de armazém com 3 turnos e um painel interativo, para ver como a entrada de novos colaboradores afeta a taxa de serviço e os erros de separação. Os dados são simulados e o modelo que os gera está em [`dados/gerar_dados.py`](dados/gerar_dados.py). A versão em Power BI está em construção.
-- **Hardware de PC: quota de mercado e preços de placas gráficas** (SQL e Power BI). Em curso.
 
 ## Conteúdo do repositório
 
